@@ -1,7 +1,5 @@
-import base64
-import codecs
-from collections import namedtuple
 import enum
+from collections import namedtuple
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -9,10 +7,11 @@ import bcrypt
 from flask import current_app as app
 
 from shkeeper import db
-from shkeeper.modules.rates import RateSource
 from shkeeper.modules.classes.crypto import Crypto
-from .utils import format_decimal, remove_exponent
+from shkeeper.modules.rates import RateSource
+
 from .exceptions import NotRelatedToAnyInvoice
+from .utils import format_decimal, remove_exponent
 
 
 class User(db.Model):

@@ -1,12 +1,8 @@
-from abc import abstractmethod
-from os import environ
-import json
-from shkeeper import requests
 import datetime
-from collections import namedtuple
 from decimal import Decimal
-from flask import current_app as app
-from shkeeper.modules.classes.crypto import Crypto
+from os import environ
+
+from shkeeper import requests
 from shkeeper.modules.classes.ethereum import Ethereum
 
 
@@ -57,5 +53,5 @@ class Xrp(Ethereum):
             else:
                 return "Sync In Progress (%d blocks behind)" % (delta // block_interval)
 
-        except Exception as e:
+        except Exception:
             return "Offline"

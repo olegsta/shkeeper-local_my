@@ -1,11 +1,12 @@
-from abc import abstractmethod
-from os import environ
-import json
-from shkeeper import requests
 import datetime
+import json
 from collections import namedtuple
 from decimal import Decimal
+from os import environ
+
 from flask import current_app as app
+
+from shkeeper import requests
 from shkeeper.modules.classes.crypto import Crypto
 
 
@@ -82,7 +83,7 @@ class Ethereum(Crypto):
             else:
                 return "Sync In Progress (%d blocks behind)" % (delta // block_interval)
 
-        except Exception as e:
+        except Exception:
             return "Offline"
 
     def mkaddr(self, **kwargs):
@@ -149,7 +150,7 @@ class Ethereum(Crypto):
                 ).text
                 + success_text
             )
-        except Exception as e:
+        except Exception:
             error_text = f"# HELP {host}_status Connection status to {host}\n# TYPE {host}_status gauge\n{host}_status 0.0\n"
             return error_text
 

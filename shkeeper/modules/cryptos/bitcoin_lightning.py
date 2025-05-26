@@ -1,19 +1,22 @@
+import base64
+import codecs
 import datetime
+import json
+import threading
+from decimal import Decimal
 from functools import cached_property
 from os import environ, path, unlink
-import base64, codecs, json, requests
-import threading
 from time import sleep, time
-from decimal import Decimal
 from typing import List, Literal, Tuple
 
+import requests
 from flask import current_app as app
 
-from shkeeper.events import shkeeper_initialized
-from shkeeper.models import BitcoinLightningInvoice as BLI, Setting
-from shkeeper.modules.classes.crypto import Crypto
 from shkeeper import db
-from shkeeper.utils import format_decimal
+from shkeeper.events import shkeeper_initialized
+from shkeeper.models import BitcoinLightningInvoice as BLI
+from shkeeper.models import Setting
+from shkeeper.modules.classes.crypto import Crypto
 from shkeeper.wallet_encryption import wallet_encryption
 
 
@@ -337,9 +340,9 @@ class BitcoinLightning(Crypto):
             sleep(self.LIGHTNING_WALLET_UNLOCK_PERIOD)
 
     def seed_saver(self, app):
-        app.logger.debug(f"waiting for shkeeper initialization...")
+        app.logger.debug("waiting for shkeeper initialization...")
         shkeeper_initialized.wait()
-        app.logger.debug(f"received shkeeper initialization signal!")
+        app.logger.debug("received shkeeper initialization signal!")
 
         while True:
             sleep(self.LIGHTNING_WALLET_SEED_SAVER_PERIOD)

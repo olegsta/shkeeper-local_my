@@ -3,7 +3,6 @@ import enum
 from time import sleep
 
 import bcrypt
-
 from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -27,7 +26,6 @@ class wallet_encryption:
 
     @staticmethod
     def persistent_status() -> WalletEncryptionPersistentStatus:
-        from . import db
         from .models import Setting
 
         if setting := Setting.query.get("WalletEncryptionPersistentStatus"):
