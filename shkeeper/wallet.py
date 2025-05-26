@@ -1,50 +1,42 @@
-from collections import defaultdict
 import copy
 import csv
+from collections import defaultdict
 from decimal import Decimal, InvalidOperation
-import inspect
 from io import StringIO
-import itertools
 
-from flask import Blueprint
-from flask import flash
-from flask import g
-from flask import redirect
-from flask import render_template
-from flask import request
-from flask import url_for
-from werkzeug.exceptions import abort
-from werkzeug.wrappers import Response
-from flask import current_app as app
 import prometheus_client
+from flask import Blueprint
+from flask import current_app as app
+from flask import flash, redirect, render_template, request, url_for
+from werkzeug.wrappers import Response
 
 from shkeeper import db
 from shkeeper.auth import login_required, metrics_basic_auth
-from shkeeper.wallet_encryption import (
-    wallet_encryption,
-    WalletEncryptionRuntimeStatus,
-    WalletEncryptionPersistentStatus,
-)
-from .modules.classes.tron_token import TronToken
-from .modules.classes.ethereum import Ethereum
-from shkeeper.modules.rates import RateSource
-from shkeeper.modules.classes.crypto import Crypto
 from shkeeper.models import (
+    ExchangeRate,
     FeeCalculationPolicy,
     Invoice,
     InvoiceAddress,
+    InvoiceStatus,
     Payout,
     PayoutDestination,
+    PayoutPolicy,
     PayoutStatus,
     PayoutTx,
     PayoutTxStatus,
-    Wallet,
-    PayoutPolicy,
-    ExchangeRate,
-    InvoiceStatus,
     Transaction,
+    Wallet,
+)
+from shkeeper.modules.classes.crypto import Crypto
+from shkeeper.modules.rates import RateSource
+from shkeeper.wallet_encryption import (
+    WalletEncryptionPersistentStatus,
+    WalletEncryptionRuntimeStatus,
+    wallet_encryption,
 )
 
+from .modules.classes.ethereum import Ethereum
+from .modules.classes.tron_token import TronToken
 
 prometheus_client.REGISTRY.unregister(prometheus_client.GC_COLLECTOR)
 prometheus_client.REGISTRY.unregister(prometheus_client.PLATFORM_COLLECTOR)

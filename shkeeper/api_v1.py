@@ -1,35 +1,29 @@
-from decimal import Decimal
 import traceback
+from decimal import Decimal
 from os import environ
 
-from werkzeug.datastructures import Headers
-from flask import Blueprint, jsonify
-from flask import request
-from flask import Response
-from flask import stream_with_context
+from flask import Blueprint, Response
 from flask import current_app as app
-from flask.json import JSONDecoder
+from flask import jsonify, request, stream_with_context
 from flask_sqlalchemy import sqlalchemy
-from shkeeper import requests
+from werkzeug.datastructures import Headers
 
-from shkeeper import db
-from shkeeper.auth import basic_auth_optional, login_required, api_key_required
+from shkeeper import db, requests
+from shkeeper.auth import api_key_required, basic_auth_optional, login_required
+from shkeeper.callback import send_notification, send_unconfirmed_notification
+from shkeeper.exceptions import NotRelatedToAnyInvoice
+from shkeeper.models import *
 from shkeeper.modules.classes.crypto import Crypto
-from shkeeper.modules.classes.tron_token import TronToken
 from shkeeper.modules.classes.ethereum import Ethereum
+from shkeeper.modules.classes.tron_token import TronToken
 from shkeeper.modules.cryptos.bitcoin_lightning import BitcoinLightning
 from shkeeper.modules.cryptos.monero import Monero
-from shkeeper.modules.rates import RateSource
-from shkeeper.models import *
-from shkeeper.callback import send_notification, send_unconfirmed_notification
 from shkeeper.utils import format_decimal
 from shkeeper.wallet_encryption import (
-    wallet_encryption,
     WalletEncryptionPersistentStatus,
     WalletEncryptionRuntimeStatus,
+    wallet_encryption,
 )
-from shkeeper.exceptions import NotRelatedToAnyInvoice
-
 
 bp = Blueprint("api_v1", __name__, url_prefix="/api/v1/")
 
@@ -46,8 +40,10 @@ def list_crypto():
     crypto_list = []
     for crypto in Crypto.instances.values():
         if crypto.wallet.enabled and (crypto.getstatus() != "Offline"):
-            if (not app.config.get("DISABLE_CRYPTO_WHEN_LAGS") or 
-                    (app.config.get("DISABLE_CRYPTO_WHEN_LAGS") and crypto.getstatus() == "Synced")):
+            if not app.config.get("DISABLE_CRYPTO_WHEN_LAGS") or (
+                app.config.get("DISABLE_CRYPTO_WHEN_LAGS")
+                and crypto.getstatus() == "Synced"
+            ):
                 filtered_list.append(crypto.crypto)
                 crypto_list.append(
                     {"name": crypto.crypto, "display_name": crypto.display_name}
@@ -83,7 +79,10 @@ def payment_request(crypto_name):
                 "status": "error",
                 "message": f"{crypto_name} payment gateway is unavailable",
             }
-        if app.config.get("DISABLE_CRYPTO_WHEN_LAGS") and crypto.getstatus() != "Synced":
+        if (
+            app.config.get("DISABLE_CRYPTO_WHEN_LAGS")
+            and crypto.getstatus() != "Synced"
+        ):
             return {
                 "status": "error",
                 "message": f"{crypto_name} payment gateway is unavailable because of lagging",
@@ -107,6 +106,7 @@ def payment_request(crypto_name):
 
     return response
 
+
 @bp.post("/<crypto_name>/quote")
 @api_key_required
 def get_crypto_quote(crypto_name):
@@ -123,7 +123,10 @@ def get_crypto_quote(crypto_name):
                 "status": "error",
                 "message": f"{crypto_name} payment gateway is unavailable",
             }
-        if app.config.get("DISABLE_CRYPTO_WHEN_LAGS") and crypto.getstatus() != "Synced":
+        if (
+            app.config.get("DISABLE_CRYPTO_WHEN_LAGS")
+            and crypto.getstatus() != "Synced"
+        ):
             return {
                 "status": "error",
                 "message": f"{crypto_name} payment gateway is unavailable because of lagging",
@@ -159,6 +162,7 @@ def get_crypto_quote(crypto_name):
             "message": str(e),
             "traceback": traceback.format_exc(),
         }
+
 
 @bp.get("/<crypto_name>/payment-gateway")
 @login_required
@@ -316,7 +320,7 @@ def payoutnotify(crypto_name):
             app.logger.warning("No backend key provided")
             return {"status": "error", "message": "No backend key provided"}, 403
 
-        crypto = Crypto.instances[crypto_name]
+        Crypto.instances[crypto_name]
         bkey = environ.get(f"SHKEEPER_BTC_BACKEND_KEY", "shkeeper")
         if request.headers["X-Shkeeper-Backend-Key"] != bkey:
             app.logger.warning("Wrong backend key")
@@ -402,7 +406,7 @@ def walletnotify(crypto_name, txid):
             "status": "success",
             "message": "Transaction is not related to any invoice",
         }
-    except Exception as e:
+    except Exception:
         app.logger.exception(
             f"Exception while processing transaction notification: {crypto_name}/{txid}"
         )
@@ -420,7 +424,7 @@ def decrypt_key(crypto_name):
             return {"status": "error", "message": "No backend key provided"}, 403
 
         try:
-            crypto = Crypto.instances[crypto_name]
+            Crypto.instances[crypto_name]
         except KeyError:
             return {
                 "status": "success",
@@ -431,7 +435,7 @@ def decrypt_key(crypto_name):
         if request.headers["X-Shkeeper-Backend-Key"] != bkey:
             app.logger.warning("Wrong backend key")
             return {"status": "error", "message": "Wrong backend key"}, 403
-    except Exception as e:
+    except Exception:
         return {
             "status": "error",
             "message": f"Exception while processing transaction notification: {traceback.format_exc()}.",

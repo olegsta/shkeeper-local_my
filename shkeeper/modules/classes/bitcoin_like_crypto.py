@@ -1,8 +1,6 @@
-from abc import abstractmethod
+import datetime
 from decimal import Decimal
 from os import environ
-import datetime
-import functools
 
 from shkeeper import requests
 from shkeeper.modules.classes.crypto import Crypto
@@ -38,7 +36,7 @@ class BitcoinLikeCrypto(Crypto):
                     response["result"]["verificationprogress"] * 100
                 )
 
-        except Exception as e:
+        except Exception:
             return "Offline"
 
     def mkpayout(self, destination, amount, fee, subtract_fee_from_amount=False):

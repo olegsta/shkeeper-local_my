@@ -1,11 +1,9 @@
+from datetime import datetime, timedelta
 from decimal import Decimal
-from datetime import timedelta, datetime
 
-from flask_apscheduler import APScheduler
-
-from shkeeper import scheduler, callback
-from shkeeper.modules.classes.crypto import Crypto
+from shkeeper import callback, scheduler
 from shkeeper.models import *
+from shkeeper.modules.classes.crypto import Crypto
 
 
 @scheduler.task("interval", id="callback", seconds=60)

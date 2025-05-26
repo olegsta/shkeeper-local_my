@@ -1,10 +1,8 @@
 import functools
-import os
 import logging
+import os
 import secrets
-from decimal import Decimal
 import shutil
-import threading
 
 from flask import logging as flog
 
@@ -14,20 +12,19 @@ flog.default_handler.setFormatter(
     )
 )
 
-from flask import Flask
 import requests
+from flask import Flask
+from flask_apscheduler import APScheduler
 
 from shkeeper.wallet_encryption import WalletEncryptionRuntimeStatus
 
-from .utils import format_decimal
 from .events import shkeeper_initialized
-
-from flask_apscheduler import APScheduler
+from .utils import format_decimal
 
 scheduler = APScheduler()
 
-from sqlalchemy import MetaData
 import flask_sqlalchemy
+from sqlalchemy import MetaData
 
 convention = {
     "ix": "ix_%(column_0_label)s",
@@ -68,7 +65,9 @@ def create_app(test_config=None):
         DEV_MODE_ENC_PW=os.environ.get("DEV_MODE_ENC_PW"),
         NOTIFICATION_TASK_DELAY=int(os.environ.get("NOTIFICATION_TASK_DELAY", 60)),
         TEMPLATES_AUTO_RELOAD=True,
-        DISABLE_CRYPTO_WHEN_LAGS=bool(os.environ.get("DISABLE_CRYPTO_WHEN_LAGS", False)),
+        DISABLE_CRYPTO_WHEN_LAGS=bool(
+            os.environ.get("DISABLE_CRYPTO_WHEN_LAGS", False)
+        ),
     )
 
     if test_config is None:
@@ -105,8 +104,9 @@ def create_app(test_config=None):
 
     app.logger.propagate = False
 
-    from flask.json import JSONDecoder, JSONEncoder
     from decimal import Decimal
+
+    from flask.json import JSONDecoder, JSONEncoder
 
     class ShkeeperJSONDecoder(JSONDecoder):
         def __init__(self, *args, **kwargs):
@@ -134,14 +134,7 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
     with app.app_context():
         # Create tables according to models
-        from .models import (
-            Wallet,
-            User,
-            PayoutDestination,
-            Invoice,
-            ExchangeRate,
-            Setting,
-        )
+        from .models import ExchangeRate, Setting, User, Wallet
 
         db.create_all()
 
@@ -157,10 +150,8 @@ def create_app(test_config=None):
             flask_migrate.upgrade()
 
         # Register rate sources
-        import shkeeper.modules.rates
 
         # Register crypto
-        from .modules import cryptos
         from .modules.classes.crypto import Crypto
 
         for crypto in Crypto.instances.values():
@@ -201,8 +192,6 @@ def create_app(test_config=None):
                         WalletEncryptionRuntimeStatus.success
                     )
 
-        from . import tasks
-
         scheduler.start()
 
         # end of with app.app_context():
@@ -211,7 +200,7 @@ def create_app(test_config=None):
     app.jinja_env.filters["format_decimal"] = format_decimal
 
     # apply the blueprints to the app
-    from . import auth, wallet, api_v1, callback
+    from . import api_v1, auth, callback, wallet
 
     app.register_blueprint(auth.bp)
     app.register_blueprint(wallet.bp)
