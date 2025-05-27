@@ -1,13 +1,9 @@
-import base64
-import codecs
 from collections import namedtuple
 import enum
 from datetime import datetime, timedelta
 from decimal import Decimal
-
 import bcrypt
 from flask import current_app as app
-
 from shkeeper import db
 from shkeeper.modules.rates import RateSource
 from shkeeper.modules.classes.crypto import Crypto
@@ -79,7 +75,7 @@ class Wallet(db.Model):
             wallet = cls(crypto=crypto.crypto)
             db.session.add(wallet)
         if not wallet.apikey:
-            if wallet_with_apikey := cls.query.filter(cls.apikey != None).first():
+            if wallet_with_apikey := cls.query.filter(cls.apikey.isnot(None)).first():
                 wallet.apikey = wallet_with_apikey.apikey
             else:
                 wallet.apikey = app.config["SUGGESTED_WALLET_APIKEY"]

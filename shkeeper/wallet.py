@@ -2,18 +2,14 @@ from collections import defaultdict
 import copy
 import csv
 from decimal import Decimal, InvalidOperation
-import inspect
 from io import StringIO
-import itertools
 
 from flask import Blueprint
 from flask import flash
-from flask import g
 from flask import redirect
 from flask import render_template
 from flask import request
 from flask import url_for
-from werkzeug.exceptions import abort
 from werkzeug.wrappers import Response
 from flask import current_app as app
 import prometheus_client
@@ -106,7 +102,7 @@ def payout(crypto_name):
 def manage(crypto_name):
     crypto = Crypto.instances[crypto_name]
     pdest = PayoutDestination.query.filter_by(crypto=crypto_name).all()
-    wallet = Wallet.query.filter_by(crypto=crypto_name).first()
+    Wallet.query.filter_by(crypto=crypto_name).first()
 
     server_templates = [
         f"wallet/manage_server_{cls.__name__.lower()}.j2"
@@ -514,7 +510,7 @@ def process_unlock():
         is WalletEncryptionPersistentStatus.enabled
     ):
         key = request.form.get("key")
-        if key_matches := wallet_encryption.test_key(key):
+        if wallet_encryption.test_key(key):
             wallet_encryption.set_key(key)
             wallet_encryption.set_runtime_status(WalletEncryptionRuntimeStatus.success)
         else:

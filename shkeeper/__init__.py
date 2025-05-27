@@ -4,15 +4,8 @@ import logging
 import secrets
 from decimal import Decimal
 import shutil
-import threading
-
 from flask import logging as flog
 
-flog.default_handler.setFormatter(
-    logging.Formatter(
-        "%(levelname)s %(filename)s:%(lineno)s %(funcName)s(): %(message)s"
-    )
-)
 
 from flask import Flask
 import requests
@@ -23,11 +16,18 @@ from .utils import format_decimal
 from .events import shkeeper_initialized
 
 from flask_apscheduler import APScheduler
-
-scheduler = APScheduler()
-
 from sqlalchemy import MetaData
 import flask_sqlalchemy
+import flask_migrate
+
+
+flog.default_handler.setFormatter(
+    logging.Formatter(
+        "%(levelname)s %(filename)s:%(lineno)s %(funcName)s(): %(message)s"
+    )
+)
+scheduler = APScheduler()
+
 
 convention = {
     "ix": "ix_%(column_0_label)s",
@@ -38,9 +38,6 @@ convention = {
 }
 metadata = MetaData(naming_convention=convention)
 db = flask_sqlalchemy.SQLAlchemy(metadata=metadata)
-
-import flask_migrate
-
 migrate = flask_migrate.Migrate()
 
 
@@ -106,7 +103,6 @@ def create_app(test_config=None):
     app.logger.propagate = False
 
     from flask.json import JSONDecoder, JSONEncoder
-    from decimal import Decimal
 
     class ShkeeperJSONDecoder(JSONDecoder):
         def __init__(self, *args, **kwargs):
@@ -134,14 +130,7 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
     with app.app_context():
         # Create tables according to models
-        from .models import (
-            Wallet,
-            User,
-            PayoutDestination,
-            Invoice,
-            ExchangeRate,
-            Setting,
-        )
+        from .models import (Wallet, User, PayoutDestination, Invoice, ExchangeRate, Setting)  # noqa: F401
 
         db.create_all()
 
@@ -157,10 +146,10 @@ def create_app(test_config=None):
             flask_migrate.upgrade()
 
         # Register rate sources
-        import shkeeper.modules.rates
+        import shkeeper.modules.rates  # noqa: F401
 
         # Register crypto
-        from .modules import cryptos
+        from .modules import cryptos  # noqa: F401
         from .modules.classes.crypto import Crypto
 
         for crypto in Crypto.instances.values():
@@ -192,16 +181,16 @@ def create_app(test_config=None):
 
         if app.config.get("DEV_MODE"):
             if (
-                wallet_encryption.wallet_encryption.persistent_status()
+                wallet_encryption.wallet_encryption.persistent_status()  # noqa: F821
                 is WalletEncryptionPersistentStatus.enabled
             ):
                 if key := app.config.get("DEV_MODE_ENC_PW"):
-                    wallet_encryption.wallet_encryption.set_key(key)
-                    wallet_encryption.wallet_encryption.set_runtime_status(
+                    wallet_encryption.wallet_encryption.set_key(key)  # noqa: F821
+                    wallet_encryption.wallet_encryption.set_runtime_status(  # noqa: F821
                         WalletEncryptionRuntimeStatus.success
                     )
 
-        from . import tasks
+        from . import tasks  # noqa: F401
 
         scheduler.start()
 
