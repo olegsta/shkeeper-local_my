@@ -27,7 +27,7 @@ class wallet_encryption:
 
     @staticmethod
     def persistent_status() -> WalletEncryptionPersistentStatus:
-        from . import db
+        from . import db  # noqa: F401
         from .models import Setting
 
         if setting := Setting.query.get("WalletEncryptionPersistentStatus"):
@@ -35,7 +35,7 @@ class wallet_encryption:
 
     @staticmethod
     def set_persistent_status(status: WalletEncryptionPersistentStatus):
-        from . import db
+        from . import db  # noqa: F401
         from .models import Setting
 
         if setting := Setting.query.get("WalletEncryptionPersistentStatus"):

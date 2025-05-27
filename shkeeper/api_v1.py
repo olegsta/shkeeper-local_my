@@ -1,17 +1,15 @@
+# flake8: noqa: F403, F405, F841
 from decimal import Decimal
 import traceback
 from os import environ
-
 from werkzeug.datastructures import Headers
 from flask import Blueprint, jsonify
 from flask import request
 from flask import Response
 from flask import stream_with_context
 from flask import current_app as app
-from flask.json import JSONDecoder
 from flask_sqlalchemy import sqlalchemy
 from shkeeper import requests
-
 from shkeeper import db
 from shkeeper.auth import basic_auth_optional, login_required, api_key_required
 from shkeeper.modules.classes.crypto import Crypto
@@ -19,7 +17,6 @@ from shkeeper.modules.classes.tron_token import TronToken
 from shkeeper.modules.classes.ethereum import Ethereum
 from shkeeper.modules.cryptos.bitcoin_lightning import BitcoinLightning
 from shkeeper.modules.cryptos.monero import Monero
-from shkeeper.modules.rates import RateSource
 from shkeeper.models import *
 from shkeeper.callback import send_notification, send_unconfirmed_notification
 from shkeeper.utils import format_decimal
@@ -317,7 +314,7 @@ def payoutnotify(crypto_name):
             return {"status": "error", "message": "No backend key provided"}, 403
 
         crypto = Crypto.instances[crypto_name]
-        bkey = environ.get(f"SHKEEPER_BTC_BACKEND_KEY", "shkeeper")
+        bkey = environ.get("SHKEEPER_BTC_BACKEND_KEY", "shkeeper")
         if request.headers["X-Shkeeper-Backend-Key"] != bkey:
             app.logger.warning("Wrong backend key")
             return {"status": "error", "message": "Wrong backend key"}, 403
@@ -349,7 +346,7 @@ def walletnotify(crypto_name, txid):
                 "message": f"Ignoring notification for {crypto_name}: crypto is not available for processing",
             }
 
-        bkey = environ.get(f"SHKEEPER_BTC_BACKEND_KEY", "shkeeper")
+        bkey = environ.get("SHKEEPER_BTC_BACKEND_KEY", "shkeeper")
         if request.headers["X-Shkeeper-Backend-Key"] != bkey:
             app.logger.warning("Wrong backend key")
             return {"status": "error", "message": "Wrong backend key"}, 403
@@ -393,7 +390,7 @@ def walletnotify(crypto_name, txid):
                 app.logger.info(f"[{crypto.crypto}/{txid}] TX has been added to db")
                 if not tx.need_more_confirmations:
                     send_notification(tx)
-            except sqlalchemy.exc.IntegrityError as e:
+            except sqlalchemy.exc.IntegrityError:
                 app.logger.warning(f"[{crypto.crypto}/{txid}] TX already exist in db")
         return {"status": "success"}
     except NotRelatedToAnyInvoice:
@@ -402,7 +399,7 @@ def walletnotify(crypto_name, txid):
             "status": "success",
             "message": "Transaction is not related to any invoice",
         }
-    except Exception as e:
+    except Exception:
         app.logger.exception(
             f"Exception while processing transaction notification: {crypto_name}/{txid}"
         )
@@ -427,11 +424,11 @@ def decrypt_key(crypto_name):
                 "message": f"Ignoring notification for {crypto_name}: crypto is not available for processing",
             }
 
-        bkey = environ.get(f"SHKEEPER_BTC_BACKEND_KEY", "shkeeper")
+        bkey = environ.get("SHKEEPER_BTC_BACKEND_KEY", "shkeeper")
         if request.headers["X-Shkeeper-Backend-Key"] != bkey:
             app.logger.warning("Wrong backend key")
             return {"status": "error", "message": "Wrong backend key"}, 403
-    except Exception as e:
+    except Exception:
         return {
             "status": "error",
             "message": f"Exception while processing transaction notification: {traceback.format_exc()}.",
@@ -479,7 +476,7 @@ def backup(crypto_name):
         return Response(content, headers=headers)
 
     url = crypto.dump_wallet()
-    bkey = environ.get(f"SHKEEPER_BTC_BACKEND_KEY")
+    bkey = environ.get("SHKEEPER_BTC_BACKEND_KEY")
     req = requests.get(url, stream=True, headers={"X-SHKEEPER-BACKEND-KEY": bkey})
     headers = Headers()
     headers.add("Content-Type", req.headers["content-type"])
@@ -579,7 +576,7 @@ def list_transactions(crypto, addr):
             status="success", transactions=[tx.to_json() for tx in transactions]
         )
     except Exception as e:
-        app.logger.exception(f"Failed to list transactions")
+        app.logger.exception("Failed to list transactions")
         return {
             "status": "error",
             "message": str(e),
@@ -598,7 +595,7 @@ def list_invoices(external_id):
             invoices = Invoice.query.filter_by(external_id=external_id)
         return jsonify(status="success", invoices=[i.to_json() for i in invoices])
     except Exception as e:
-        app.logger.exception(f"Failed to list invoices")
+        app.logger.exception("Failed to list invoices")
         return {
             "status": "error",
             "message": str(e),
@@ -648,7 +645,7 @@ def get_txid_info(txid, external_id):
             }
         return {"status": "success", "info": info}
     except Exception as e:
-        app.logger.exception(f"Oops!")
+        app.logger.exception("Oops!")
         return {
             "status": "error",
             "message": str(e),

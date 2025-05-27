@@ -1,4 +1,3 @@
-from abc import abstractmethod
 from decimal import Decimal
 from os import environ
 import datetime
@@ -35,7 +34,7 @@ class TronToken(Crypto):
                 auth=self.get_auth_creds(),
             ).json(parse_float=Decimal)
             balance = response["balance"]
-        except Exception as e:
+        except Exception:
             app.logger.exception("balance error")
             balance = False
 
@@ -58,7 +57,7 @@ class TronToken(Crypto):
             else:
                 return "Sync In Progress (%d blocks behind)" % (delta // block_interval)
 
-        except Exception as e:
+        except Exception:
             return "Offline"
 
     def mkaddr(self, **kwargs):
