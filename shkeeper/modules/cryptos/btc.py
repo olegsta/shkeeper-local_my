@@ -1,6 +1,7 @@
 from shkeeper.modules.classes.bitcoin_like_crypto import BitcoinLikeCrypto
 
 
+
 class btc(BitcoinLikeCrypto):
     fee_description = "sat/vByte"
 

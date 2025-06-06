@@ -304,6 +304,8 @@ function sendAction()
     }
     let paymentPartiallyPaid = validateFloatValue(document.getElementById("llimit"));
     let paymentAddedFee = validateFloatValue(document.getElementById("ulimit"));
+    let xPubElement = document.getElementById("xpub");
+    let xPub = xPubElement ? xPubElement.value : "";
     let recalculateTerm = getRecalcTermHour();
     let confirationNumber = validateNumValue(document.getElementById("confirmations"));
     if(check == false)
@@ -319,6 +321,7 @@ function sendAction()
       policyValue: policyValue,
       partiallPaid:  paymentPartiallyPaid,
       addedFee: paymentAddedFee,
+      xPub: xPub,
       confirationNum: confirationNumber,
       recalc: recalculateTerm //int
     });
